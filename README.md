@@ -2,15 +2,19 @@
 Yet Another Web Service based on Python Flask with MongoDB
 
 ## To do list
-- [ ] Duplicate [Flask-API Boilerplate](https://github.com/ardihikaru/flask-api)
-- [ ] Change database connection from CockroachDB into MongoDB
+- [x] Duplicate [Flask-API Boilerplate](https://github.com/ardihikaru/flask-api)
+- [x] Change database connection from CockroachDB into MongoDB
 - [ ] Default Endpoints APIs
     - [ ] POST /auth/login
     - [ ] GET /auth/logout
-    - [ ] POST /users
-    - [ ] PUT /users
-    - [ ] GET /users
-    - [ ] DELETE /users
+    - [x] POST /users
+    - [x] PUT /users
+    - [x] GET /users
+    - [x] DELETE /users
+    - [x] GET /users/<id>
+    - [x] PUT /users/<id>
+    - [ ] PUT /users/<id>; Enabling access_token
+    - [x] DELETE /users/<id>
     
 ## Requirements
 - Python 3.6++
