@@ -66,47 +66,21 @@ class UserRoute(Resource):
     #         return masked_json_template(resp, 200)
     #     except:
     #         abort(400, "Input unrecognizable.")
-#
-# @api.route('/username/<username>')
-# # @api.hide
-# @api.response(404, 'Json Input should be provided.')
-# @api.response(401, 'Unauthorized Access. Access Token should be provided and validated.')
-# class UserFindRoute(Resource):
-#     @api.doc(security=None)
-#     @api.marshal_with(register_results)
-#     def get(self, username):
-#         '''Get user data by username'''
-#         try:
-#             resp = User().get_data_by_username(username)
-#             return masked_json_template(resp, 200)
-#         except:
-#             abort(400, "Input unrecognizable.")
-#
-#     @api.doc(security=None)
-#     @api.marshal_with(register_results)
-#     def delete(self, username):
-#         '''Delete user data by username'''
-#         try:
-#             resp = User().delete_data_by_username(username)
-#             return masked_json_template(resp, 200)
-#         except:
-#             abort(400, "Input unrecognizable.")
-#
-#
+
 @api.route('/<userid>')
 # @api.hide
 @api.response(404, 'Json Input should be provided.')
 @api.response(401, 'Unauthorized Access. Access Token should be provided and validated.')
 class UserIDFindRoute(Resource):
-    # @api.doc(security=None)
-    # @api.marshal_with(register_results)
-    # def get(self, userid):
-    #     '''Get user data by user ID'''
-    #     try:
-    #         resp = User().get_data_by_userid(userid)
-    #         return masked_json_template(resp, 200)
-    #     except:
-    #         abort(400, "Input unrecognizable.")
+    @api.doc(security=None)
+    @api.marshal_with(register_results)
+    def get(self, userid):
+        '''Get user data by user ID'''
+        try:
+            resp = User().get_data_by_userid(userid)
+            return masked_json_template(resp, 200)
+        except:
+            abort(400, "Input unrecognizable.")
 
     @api.doc(security=None)
     @api.marshal_with(update_results)

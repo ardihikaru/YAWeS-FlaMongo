@@ -186,8 +186,8 @@ class User:
         self.trx_upd_data_by_userid(userid, json_data)
         return get_json_template(response=self.resp_status, results=self.resp_data, total=-1, message=self.msg)
 
-    def trx_get_data_by_userid(self, ses, userid):
-        is_valid, user_data = get_user_by_userid(ses, User, userid)
+    def trx_get_data_by_userid(self, userid):
+        is_valid, user_data, _ = get_user_by_userid(UserModel, userid)
         self.set_resp_status(is_valid)
         self.set_msg("Fetching data failed.")
         if is_valid:
@@ -196,7 +196,7 @@ class User:
         self.set_resp_data(user_data)
 
     def get_data_by_userid(self, userid):
-        run_transaction(sessionmaker(bind=engine), lambda var: self.trx_get_data_by_userid(var, userid))
+        self.trx_get_data_by_userid(userid)
         return get_json_template(response=self.resp_status, results=self.resp_data, total=-1, message=self.msg)
 
     def trx_get_data_by_hobby(self, ses, hobby, register_after):
