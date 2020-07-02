@@ -350,6 +350,30 @@ def sqlresp_to_dict(obj):
     return result
 
 
+def mongo_list_to_dict(mongo_resp):
+    result = []
+    list_data = json.loads(mongo_resp)
+    for data in list_data:
+        data["id"] = data["_id"]["$oid"]
+        if "create_time" in data and \
+                data["create_time"] is not None and \
+                "$date" in data["create_time"]:
+            data["create_time"] = datetime.fromtimestamp(int(str(data["create_time"]["$date"])[:-3]))
+        # data.pop("_id")
+        result.append(data)
+    return result
+
+
+def mongo_dict_to_dict(mongo_resp):
+    data = json.loads(mongo_resp)
+    data["id"] = data["_id"]["$oid"]
+    if "create_time" in data and \
+            data["create_time"] is not None and \
+            "$date" in data["create_time"]:
+        data["create_time"] = datetime.fromtimestamp(int(str(data["create_time"]["$date"])[:-3]))
+    return data
+
+
 def sql_to_dict_resp(obj):
     result = get_json_template()
     data = sqlresp_to_dict(obj)
@@ -360,6 +384,7 @@ def sql_to_dict_resp(obj):
         result["total"] = len(data)
 
     return result
+
 
 def json_load_str(str_json, type="list"):
     if len(str_json) > 0:

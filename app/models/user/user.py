@@ -1,4 +1,4 @@
-from app import app, engine, local_settings, Base
+from app import app
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import session
 from app.addons.utils import json_load_str, get_json_template
@@ -11,10 +11,10 @@ from .user_model import UserModel
 from .user_functions import get_all_users, get_user_by_username, del_user_by_username, store_jwt_data, \
     del_user_by_userid, upd_user_by_userid, get_user_by_userid, insert_new_data, get_user_data_by_hobby, \
     get_user_data_by_hobby_between, del_all_data
-import simplejson as json
+import datetime
 
 
-class User(UserModel):
+class User:
     def __init__(self):
         self.resp_status = None
         self.resp_data = None
@@ -45,7 +45,7 @@ class User(UserModel):
         self.revokesExistedToken(encoded_token)
         return get_json_template(response=True, results=-1, total=-1, message="Logout Success.")
 
-    def __validate_register_data(self, ses, json_data):
+    def __validate_register_data(self, json_data):
         is_input_valid = True
         if "name" not in json_data:
             return False, "Name should not be EMPTY."
@@ -66,14 +66,14 @@ class User(UserModel):
             return False, "Password Confirmation missmatch with Password."
 
         if is_input_valid:
-            is_id_exist, _ = get_user_by_username(ses, User, json_data["username"])
+            is_id_exist, _ = get_user_by_username(UserModel, json_data["username"])
             if is_id_exist:
                 return False, "Username `%s` have been used." % json_data["username"]
 
         return True, None
 
-    def trx_register(self, ses, json_data):
-        is_valid, msg = self.__validate_register_data(ses, json_data)
+    def trx_register(self, json_data):
+        is_valid, msg = self.__validate_register_data(json_data)
         self.set_resp_status(is_valid)
         self.set_msg(msg)
 
@@ -81,13 +81,16 @@ class User(UserModel):
             msg = "Registration is success. Now, you can login into our system."
             self.set_password(json_data["password"])
             json_data["password"] = self.password_hash
-            _, json_data = insert_new_data(ses, UserModel, json_data)
+
+            #  inserting
+            is_valid, inserted_data, msg = insert_new_data(UserModel, json_data, msg)
+
             self.set_msg(msg)
 
         self.set_resp_data(json_data)
 
     def register(self, json_data):
-        run_transaction(sessionmaker(bind=engine), lambda var: self.trx_register(var, json_data))
+        self.trx_register(json_data)
         return get_json_template(response=self.resp_status, results=self.resp_data, total=-1, message=self.msg)
 
     def __validate_login_data(self, ses, json_data):
@@ -103,10 +106,13 @@ class User(UserModel):
             self.set_msg("Password should not be EMPTY.")
 
         if is_input_valid:
+            print(" --- is_input_valid:", is_input_valid)
             is_id_exist, user_data = get_user_by_username(ses, User, json_data["username"], show_passwd=True)
             if is_id_exist:
+                print(" --- id Exist !!")
                 self.password_hash = user_data["password"]
                 if self.is_password_match(json_data["password"]):  # check password
+                    print(" --- password bener")
                     self.set_resp_status(is_id_exist)
                     self.set_msg("User data FOUND.")
 
@@ -128,8 +134,8 @@ class User(UserModel):
         run_transaction(sessionmaker(bind=engine), lambda var: self.__validate_login_data(var, json_data))
         return get_json_template(response=self.resp_status, results=self.resp_data, total=-1, message=self.msg)
 
-    def trx_get_users(self, ses, get_args=None):
-        is_valid, users, self.total_records = get_all_users(ses, User, get_args)
+    def trx_get_users(self, get_args=None):
+        is_valid, users, self.total_records = get_all_users(UserModel, get_args)
         self.set_resp_status(is_valid)
         self.set_msg("Fetching data failed.")
         if is_valid:
@@ -150,7 +156,8 @@ class User(UserModel):
 
     def get_users(self, get_args=None):
         get_args = self.__extract_get_args(get_args)
-        run_transaction(sessionmaker(bind=engine), lambda var: self.trx_get_users(var, get_args=get_args))
+        self.trx_get_users(get_args=get_args)
+        # run_transaction(sessionmaker(bind=engine), lambda var: self.trx_get_users(var, get_args=get_args))
         return get_json_template(response=self.resp_status, results=self.resp_data, message=self.msg,
                                  total=self.total_records)
 

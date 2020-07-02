@@ -11,8 +11,9 @@ from .initialization import init_folders, is_localhost
 from concurrent.futures import ThreadPoolExecutor
 from flask_redis import FlaskRedis
 from redis import StrictRedis
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
+
+from .database.db import initialize_db
+from flask_mongoengine import MongoEngine
 
 executor = ThreadPoolExecutor(100)
 init_folders(local_settings)
@@ -24,26 +25,30 @@ else:
     app.config.from_object(ProductionConfig)
 app.wsgi_app = ProxyFix(app.wsgi_app)
 
-Base = declarative_base()
+#  MongoDB
+db = MongoEngine()
+db.init_app(app)
+# initialize_db(app)
 
-if app.config["SECURE_CLUSTER"]:
-    connect_args = {
-        'sslmode': 'require',
-        'sslrootcert': app.config["SSL_ROOT_CERT"],
-        'sslkey': app.config["SSL_KEY"],
-        'sslcert': app.config["SSL_CERT"]
-    }
-else:
-    connect_args = {'sslmode': 'disable'}
-
-engine = create_engine(
-    app.config["SQLALCHEMY_DATABASE_URI"],
-    connect_args=connect_args,
-    echo=True  # Log SQL queries to stdout
-)
-
-from app import models
-Base.metadata.create_all(engine)
+# #  CockcroackDB
+# Base = declarative_base()
+# if app.config["SECURE_CLUSTER"]:
+#     connect_args = {
+#         'sslmode': 'require',
+#         'sslrootcert': app.config["SSL_ROOT_CERT"],
+#         'sslkey': app.config["SSL_KEY"],
+#         'sslcert': app.config["SSL_CERT"]
+#     }
+# else:
+#     connect_args = {'sslmode': 'disable'}
+# engine = create_engine(
+#     app.config["SQLALCHEMY_DATABASE_URI"],
+#     connect_args=connect_args,
+#     echo=True  # Log SQL queries to stdout
+# )
+#
+# from app import models
+# Base.metadata.create_all(engine)
 
 jwt = JWTManager(app)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})

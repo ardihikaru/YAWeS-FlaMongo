@@ -46,6 +46,12 @@ class Config(object):
     SSL_KEY = 'app/certs/client.flaskuser.key'
     SSL_CERT = 'app/certs/client.flaskuser.crt'
 
+    MONGO_DB = "flamongodb"
+    # MONGO_URI = "mongodb://localhost:27017/" + MONGO_DB
+    MONGODB_SETTINGS = {
+        'host': 'mongodb://localhost/' + MONGO_DB
+    }
+
     RESTPLUS_MASK_SWAGGER = False
 
     REDIS_HOST = get_redis_url()
