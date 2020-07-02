@@ -8,9 +8,10 @@ from app.addons.database_blacklist.blacklist_helpers import (
 from sqlalchemy.orm import sessionmaker
 from cockroachdb.sqlalchemy import run_transaction
 from .user_model import UserModel
+# from .user_functions import get_all_users, store_jwt_data, get_user_by_username, get_user_by_date, \
 from .user_functions import get_all_users, store_jwt_data, get_user_by_username, \
     del_user_by_userid, upd_user_by_userid, get_user_by_userid, insert_new_data, get_user_data_by_hobby, \
-    get_user_data_by_hobby_between, del_all_data
+    get_user_data_between, del_all_data
 import datetime
 
 
@@ -199,32 +200,55 @@ class User:
         self.trx_get_data_by_userid(userid)
         return get_json_template(response=self.resp_status, results=self.resp_data, total=-1, message=self.msg)
 
-    def trx_get_data_by_hobby(self, ses, hobby, register_after):
-        is_valid, user_data = get_user_data_by_hobby(ses, User, hobby, register_after)
+    # def trx_get_data_by_hobby(self, ses, hobby, register_after):
+    #     is_valid, user_data = get_user_data_by_hobby(ses, User, hobby, register_after)
+    #     self.set_resp_status(is_valid)
+    #     self.set_msg("Fetching data failed.")
+    #     if is_valid:
+    #         self.set_msg("Collecting data success.")
+    #
+    #     self.set_resp_data(user_data)
+    #
+    # def get_data_by_hobby(self, hobby, register_after):
+    #     run_transaction(sessionmaker(bind=engine), lambda var: self.trx_get_data_by_hobby(var, hobby, register_after))
+    #     return get_json_template(response=self.resp_status, results=self.resp_data, total=-1, message=self.msg)
+
+    # def __str_date2datetime(self, str_date):
+    #     arr_str = str_date.split(" ")
+    #     if len(arr_str) == 1:
+    #         return arr_str[0] + " " + "00:00:00"
+    #     else:
+    #         return str_date
+
+    def __sync_start_date(self, start_date):
+        date_obj = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
+        date_obj_new = date_obj - datetime.timedelta(days=1)
+        date_time = date_obj_new.strftime("%Y-%m-%d")
+        return date_time
+
+    def trx_get_data_between(self, start_date, end_date):
+        # start_date = self.__str_date2datetime(start_date)
+        # end_date = self.__str_date2datetime(end_date)
+        # if start_date == end_date:
+        start_date = self.__sync_start_date(start_date)
+        end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
+            # print(" --- MASUK IF ..")
+            # is_valid, user_data, msg, self.total_records = get_user_by_date(UserModel, start_date)
+            # print(" --- is_valid, user_data = ", is_valid, user_data)
+        # else:
+        is_valid, user_data, msg, self.total_records = get_user_data_between(UserModel, start_date, end_date)
         self.set_resp_status(is_valid)
-        self.set_msg("Fetching data failed.")
+        # self.set_msg("Fetching data failed.")
+        self.set_msg(msg)
         if is_valid:
             self.set_msg("Collecting data success.")
 
         self.set_resp_data(user_data)
 
-    def get_data_by_hobby(self, hobby, register_after):
-        run_transaction(sessionmaker(bind=engine), lambda var: self.trx_get_data_by_hobby(var, hobby, register_after))
-        return get_json_template(response=self.resp_status, results=self.resp_data, total=-1, message=self.msg)
-
-
-    def trx_get_data_by_hobby_between(self, ses, hobby, start_date, end_date):
-        is_valid, user_data = get_user_data_by_hobby_between(ses, User, hobby, start_date, end_date)
-        self.set_resp_status(is_valid)
-        self.set_msg("Fetching data failed.")
-        if is_valid:
-            self.set_msg("Collecting data success.")
-
-        self.set_resp_data(user_data)
-
-    def get_data_by_hobby_between(self, hobby, start_date, end_date):
-        run_transaction(sessionmaker(bind=engine), lambda var: self.trx_get_data_by_hobby_between(var, hobby, start_date, end_date))
-        return get_json_template(response=self.resp_status, results=self.resp_data, total=-1, message=self.msg)
+    def get_data_between(self, start_date, end_date):
+        self.trx_get_data_between(start_date, end_date)
+        return get_json_template(response=self.resp_status, results=self.resp_data, total=self.total_records,
+                                 message=self.msg)
 
     def trx_del_all_data(self, ses, get_args=None):
         is_valid, user_data, msg = del_all_data(ses, User, get_args)
@@ -242,5 +266,3 @@ class User:
         get_args = self.__extract_get_args(get_args)
         run_transaction(sessionmaker(bind=engine), lambda var: self.trx_del_all_data(var, get_args))
         return get_json_template(response=self.resp_status, results=self.resp_data, total=-1, message=self.msg)
-
-

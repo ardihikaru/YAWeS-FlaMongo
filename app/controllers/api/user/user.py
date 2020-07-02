@@ -121,17 +121,17 @@ class UserIDFindRoute(Resource):
 #             abort(400, "Input unrecognizable.")
 #
 #
-# @api.route('/<hobby>/register_between/<start_date>/<end_date>')
-# # @api.hide
-# @api.response(404, 'Json Input should be provided.')
-# @api.response(401, 'Unauthorized Access. Access Token should be provided and validated.')
-# class UserHobbyBetweenRoute(Resource):
-#     @api.doc(security=None)
-#     @api.marshal_with(register_results)
-#     def get(self, hobby, start_date, end_date):
-#         '''Get user's hobby'''
-#         try:
-#             resp = User().get_data_by_hobby_between(hobby, start_date, end_date)
-#             return masked_json_template(resp, 200)
-#         except:
-#             abort(400, "Input unrecognizable.")
+@api.route('/register_between/<start_date>/<end_date>')
+# @api.hide
+@api.response(404, 'Json Input should be provided.')
+@api.response(401, 'Unauthorized Access. Access Token should be provided and validated.')
+class UserHobbyBetweenRoute(Resource):
+    @api.doc(security=None)
+    @api.marshal_with(all_user_data)
+    def get(self, start_date, end_date):
+        '''Get data by ranged dates'''
+        try:
+            resp = User().get_data_between(start_date, end_date)
+            return masked_json_template(resp, 200)
+        except:
+            abort(400, "Input unrecognizable.")

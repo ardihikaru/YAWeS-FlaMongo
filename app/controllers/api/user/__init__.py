@@ -18,7 +18,7 @@ register_data_resp = api.model('register_data_resp', {
     'username': fields.String,
     'email': fields.String,
     'hobby': fields.String,
-    'created_time': fields.String,
+    'created_at': fields.String,
 })
 
 update_data_resp = api.model('update_data_resp', {

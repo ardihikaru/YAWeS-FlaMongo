@@ -1,4 +1,4 @@
-from mongoengine import DoesNotExist, NotUniqueError
+from mongoengine import DoesNotExist, NotUniqueError, Q
 
 from app import app, rc, local_settings
 from sqlalchemy.orm.exc import NoResultFound
@@ -19,7 +19,7 @@ def insert_new_data(user_model, new_data, msg):
         # return False, str(e)
 
     new_data["id"] = inserted_data.id
-    new_data["created_time"] = inserted_data.created_time
+    new_data["created_at"] = inserted_data.created_at
     new_data["updated_at"] = inserted_data.updated_at
 
     if len(inserted_data) > 0:
@@ -135,22 +135,65 @@ def get_user_data_by_hobby(ses, user_model, hobby, register_after):
         return False, None
 
 
-def get_user_data_by_hobby_between(ses, user_model, hobby, start_date, end_date):
-    try:
-        data = ses.query(user_model).filter_by(hobby=hobby).filter(
-            and_(
-                cast(user_model.create_time, Date) >= start_date,
-                cast(user_model.create_time, Date) <= end_date
-            )
-        ).all()
-    except NoResultFound:
-        return False, None
-    dict_user = sqlresp_to_dict(data)
+# def get_user_by_date(user_model, val_date):
+#     try:
+#         print()
+#         val_date = datetime.strptime(val_date, "%Y-%m-%d").date()
+#         print(" --- TYPE val_date: ", type(val_date))
+#         print(" --- val_date: ", val_date)
+#         print(" --- datetime.now(): ", datetime.now())
+#         # data = user_model.objects.get(created_at__eq=val_date).all().to_json()
+#         # data = user_model.objects.get(created_at__lte=datetime.now()).all().to_json()
+#         # data = user_model.objects.get(created_at__lte=datetime.now()).to_json()
+#         # data = user_model.objects.get(created_at=val_date).to_json()
+#         data = user_model.objects.get(created_at__gt=val_date).to_json()
+#         # data = user_model.objects.get(created_at__gte=datetime.now()).to_json()
+#         # data = user_model.objects.get(created_at__lte=datetime.now())
+#         # print(" --- data:", data)
+#     # except DoesNotExist:
+#     except Exception as e:
+#         print(" ---- DISINI lohhh e:", e)
+#         return False, None, "Data not found", 0
+#
+#     # dict_data = mongo_dict_to_dict(data)
+#     dict_data = mongo_list_to_dict(data)
+#
+#     return True, dict_data, None, len(dict_data)
 
-    if len(dict_user) > 0:
-        return True, dict_user
+
+def get_user_data_between(user_model, start_date, end_date):
+    try:
+        # start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+        # end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+        # start_date = datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S").date()
+        # end_date = datetime.strptime(end_date, "%Y-%m-%d %H:%M:%S").date()
+        # start_date = datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S")
+        # end_date = datetime.strptime(end_date, "%Y-%m-%d %H:%M:%S")
+
+        # if start_date == end_date:
+        #     is_exist, data = get_user_by_date(user_model, start_date)
+        #     print(" --- is_exist, data", is_exist, data)
+        #     if is_exist:
+        #         return is_exist, [data], None, 1
+        #     else:
+        #         return False, None, "Data not found", 0
+        # else:
+        data = user_model.objects(
+            Q(created_at__gte=start_date) & Q(created_at__lte=end_date)).all().to_json()
+                # Q(created_at__gte=datetime(2017, 11, 8)) & Q(created_at__lte=datetime(2020, 1, 9))).all()
+
+    except DoesNotExist:
+    # except Exception as e:
+    #     print(" ----- e:", e)
+    #     return False, [], str(e), 0
+        return False, [], "Data not found", 0
+
+    dict_data = mongo_list_to_dict(data)
+
+    if len(dict_data) > 0:
+        return True, dict_data, None, len(dict_data)
     else:
-        return False, None
+        return False, None, "Data not found", 0
 
 
 def del_all_data(ses, data_model, args=None):
