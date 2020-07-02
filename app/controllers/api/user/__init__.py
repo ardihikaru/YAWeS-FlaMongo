@@ -18,12 +18,27 @@ register_data_resp = api.model('register_data_resp', {
     'username': fields.String,
     'email': fields.String,
     'hobby': fields.String,
-    'create_time': fields.String,
+    'created_time': fields.String,
+})
+
+update_data_resp = api.model('update_data_resp', {
+    'id': fields.String,
+    'name': fields.String,
+    'username': fields.String,
+    'email': fields.String,
+    'hobby': fields.String,
+    'updated_at': fields.String,
 })
 
 register_results = api.model('register_results', {
     'response': fields.Boolean,
     'results': fields.Nested(register_data_resp),
+    'message': fields.String,
+})
+
+update_results = api.model('update_results', {
+    'response': fields.Boolean,
+    'results': fields.Nested(update_data_resp),
     'message': fields.String,
 })
 

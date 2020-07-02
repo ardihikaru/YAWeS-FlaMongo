@@ -7,6 +7,7 @@ from flask_jwt_extended import create_access_token, create_refresh_token, get_jw
 from app.addons.utils import sqlresp_to_dict, mongo_list_to_dict, mongo_dict_to_dict
 # from datetime import date  # eg.g date.today())
 from sqlalchemy import Date, cast, and_  # detailed here: https://docs.sqlalchemy.org/en/13/core/sqlelement.html?
+from datetime import datetime
 
 
 def insert_new_data(user_model, new_data, msg):
@@ -18,7 +19,8 @@ def insert_new_data(user_model, new_data, msg):
         # return False, str(e)
 
     new_data["id"] = inserted_data.id
-    new_data["create_time"] = inserted_data.create_time
+    new_data["created_time"] = inserted_data.created_time
+    new_data["updated_at"] = inserted_data.updated_at
 
     if len(inserted_data) > 0:
         return True, inserted_data, msg
@@ -50,87 +52,51 @@ def get_all_users(user_model, args=None):
         return False, None, 0
 
 
+def get_user_by_userid(user_model, userid):
+    try:
+        data = user_model.objects.get(id=userid).to_json()
+    # except DoesNotExist:
+    except Exception as e:
+        return False, None, str(e)
+
+    dict_data = mongo_dict_to_dict(data)
+
+    return True, dict_data, None
+
+
 def get_user_by_username(user_model, username):
     try:
         data = user_model.objects.get(username=username).to_json()
-    except DoesNotExist:
-        return False, None
-    data_dict = mongo_dict_to_dict(data)
-
-    if len(data_dict) > 0:
-        return True, data_dict
-    else:
+    # except DoesNotExist:
+    except Exception as e:
         return False, None
 
+    dict_data = mongo_dict_to_dict(data)
 
-def del_user_by_username(ses, user_model, username, show_passwd=False):
+    return True, dict_data
+
+
+def del_user_by_userid(user_model, userid):
     try:
-        data = ses.query(user_model).filter_by(username=username).one()
-        ses.query(user_model).filter_by(username=username).delete()
-    except NoResultFound:
-        return False, None, "User not found"
+        user_model.objects.get(id=userid).delete()
+    # except DoesNotExist:
+    except Exception as e:
+        return False, str(e)
 
-    dict_user = data.to_dict(show_passwd)
+    return True, None
 
-    if len(dict_user) > 0:
-        return True, dict_user, None
-    else:
-        return False, None, None
 
-def del_user_by_userid(ses, user_model, userid, show_passwd=False):
+def upd_user_by_userid(user_model, userid, new_data):
     try:
-        data = ses.query(user_model).filter_by(id=userid).one()
-        ses.query(user_model).filter_by(id=userid).delete()
-    except NoResultFound:
-        return False, None, "User not found"
+        user_model.objects.get(id=userid).update(**new_data)
+    # except DoesNotExist:
+    except Exception as e:
+        return False, None, str(e)
 
-    dict_user = data.to_dict(show_passwd)
+    new_data["id"] = userid
+    new_data["updated_at"] = datetime.now().strftime("%Y-%m-%d, %H:%M:%S")
 
-    if len(dict_user) > 0:
-        return True, dict_user, None
-    else:
-        return False, None, None
-
-
-def upd_user_by_userid(ses, user_model, userid, show_passwd=False, new_data=None):
-    try:
-        data = ses.query(user_model).filter_by(id=userid).one()
-
-        if new_data is not None:
-            data.name = new_data["name"] if "name" in new_data else data.name
-            data.username = new_data["username"] if "username" in new_data else data.username
-            data.email = new_data["email"] if "email" in new_data else data.email
-            data.hobby = new_data["hobby"] if "hobby" in new_data else data.hobby
-
-        ses.query(user_model).filter_by(id=userid).update(
-            {
-                "name": data.name,
-                "username": data.username,
-                "email": data.email,
-                "hobby": data.hobby
-            }
-        )
-    except NoResultFound:
-        return False, None, None
-    dict_user = data.to_dict(show_passwd)
-
-    if len(dict_user) > 0:
-        return True, dict_user, None
-    else:
-        return False, None, None
-
-
-def get_user_by_userid(ses, user_model, userid, show_passwd=False):
-    try:
-        data = ses.query(user_model).filter_by(id=userid).one()
-    except NoResultFound:
-        return False, None
-    dict_user = data.to_dict(show_passwd)
-
-    if len(dict_user) > 0:
-        return True, dict_user
-    else:
-        return False, None
+    return True, new_data, None
 
 
 def store_jwt_data(json_data):

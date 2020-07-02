@@ -46,7 +46,8 @@ class Config(object):
     SSL_KEY = 'app/certs/client.flaskuser.key'
     SSL_CERT = 'app/certs/client.flaskuser.crt'
 
-    MONGO_DB = "flamongodb"
+    # MONGO_DB = "flamongodb"
+    MONGO_DB = "flaask-mongodb"
     # MONGO_URI = "mongodb://localhost:27017/" + MONGO_DB
     MONGODB_SETTINGS = {
         'host': 'mongodb://localhost/' + MONGO_DB

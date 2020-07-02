@@ -8,7 +8,7 @@ from app.addons.database_blacklist.blacklist_helpers import (
 from sqlalchemy.orm import sessionmaker
 from cockroachdb.sqlalchemy import run_transaction
 from .user_model import UserModel
-from .user_functions import get_all_users, get_user_by_username, del_user_by_username, store_jwt_data, \
+from .user_functions import get_all_users, store_jwt_data, get_user_by_username, \
     del_user_by_userid, upd_user_by_userid, get_user_by_userid, insert_new_data, get_user_data_by_hobby, \
     get_user_data_by_hobby_between, del_all_data
 import datetime
@@ -106,13 +106,10 @@ class User:
             self.set_msg("Password should not be EMPTY.")
 
         if is_input_valid:
-            print(" --- is_input_valid:", is_input_valid)
             is_id_exist, user_data = get_user_by_username(ses, User, json_data["username"], show_passwd=True)
             if is_id_exist:
-                print(" --- id Exist !!")
                 self.password_hash = user_data["password"]
                 if self.is_password_match(json_data["password"]):  # check password
-                    print(" --- password bener")
                     self.set_resp_status(is_id_exist)
                     self.set_msg("User data FOUND.")
 
@@ -161,34 +158,10 @@ class User:
         return get_json_template(response=self.resp_status, results=self.resp_data, message=self.msg,
                                  total=self.total_records)
 
-    def trx_get_data_by_username(self, ses, username):
-        is_valid, user_data = get_user_by_username(ses, User, username)
-        self.set_resp_status(is_valid)
-        self.set_msg("Fetching data failed.")
+    def trx_del_data_by_userid(self, userid):
+        is_valid, user_data, msg = get_user_by_userid(UserModel, userid)
         if is_valid:
-            self.set_msg("Collecting data success.")
-
-        self.set_resp_data(user_data)
-
-    def get_data_by_username(self, username):
-        run_transaction(sessionmaker(bind=engine), lambda var: self.trx_get_data_by_username(var, username))
-        return get_json_template(response=self.resp_status, results=self.resp_data, total=-1, message=self.msg)
-
-    def trx_del_data_by_username(self, ses, username):
-        is_valid, user_data, msg = del_user_by_username(ses, User, username)
-        self.set_resp_status(is_valid)
-        self.set_msg(msg)
-        if is_valid:
-            self.set_msg("Deleting data success.")
-
-        self.set_resp_data(user_data)
-
-    def delete_data_by_username(self, username):
-        run_transaction(sessionmaker(bind=engine), lambda var: self.trx_del_data_by_username(var, username))
-        return get_json_template(response=self.resp_status, results=self.resp_data, total=-1, message=self.msg)
-
-    def trx_del_data_by_userid(self, ses, userid):
-        is_valid, user_data, msg = del_user_by_userid(ses, User, userid)
+            is_valid, msg = del_user_by_userid(UserModel, userid)
         self.set_resp_status(is_valid)
         self.set_msg(msg)
         if is_valid:
@@ -197,11 +170,11 @@ class User:
         self.set_resp_data(user_data)
 
     def delete_data_by_userid(self, userid):
-        run_transaction(sessionmaker(bind=engine), lambda var: self.trx_del_data_by_userid(var, userid))
+        self.trx_del_data_by_userid(userid)
         return get_json_template(response=self.resp_status, results=self.resp_data, total=-1, message=self.msg)
 
-    def trx_upd_data_by_userid(self, ses, userid, json_data):
-        is_valid, user_data, msg = upd_user_by_userid(ses, User, userid, new_data=json_data)
+    def trx_upd_data_by_userid(self, userid, json_data):
+        is_valid, user_data, msg = upd_user_by_userid(UserModel, userid, new_data=json_data)
         self.set_resp_status(is_valid)
         self.set_msg(msg)
         if is_valid:
@@ -210,7 +183,7 @@ class User:
         self.set_resp_data(user_data)
 
     def update_data_by_userid(self, userid, json_data):
-        run_transaction(sessionmaker(bind=engine), lambda var: self.trx_upd_data_by_userid(var, userid, json_data))
+        self.trx_upd_data_by_userid(userid, json_data)
         return get_json_template(response=self.resp_status, results=self.resp_data, total=-1, message=self.msg)
 
     def trx_get_data_by_userid(self, ses, userid):

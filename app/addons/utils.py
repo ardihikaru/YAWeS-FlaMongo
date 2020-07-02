@@ -354,23 +354,34 @@ def mongo_list_to_dict(mongo_resp):
     result = []
     list_data = json.loads(mongo_resp)
     for data in list_data:
-        data["id"] = data["_id"]["$oid"]
-        if "create_time" in data and \
-                data["create_time"] is not None and \
-                "$date" in data["create_time"]:
-            data["create_time"] = datetime.fromtimestamp(int(str(data["create_time"]["$date"])[:-3]))
-        # data.pop("_id")
+        data = mongo_dict_to_dict(data, is_dict=True)
+        # data["id"] = data["_id"]["$oid"]
+        # if "created_time" in data and \
+        #         data["created_time"] is not None and \
+        #         "$date" in data["created_time"]:
+        #     data["created_time"] = datetime.fromtimestamp(int(str(data["created_time"]["$date"])[:-3]))
+        # # data.pop("_id")
         result.append(data)
     return result
 
 
-def mongo_dict_to_dict(mongo_resp):
-    data = json.loads(mongo_resp)
+def mongo_dict_to_dict(mongo_resp, is_dict=False):
+    if is_dict:
+        data = mongo_resp
+    else:
+        data = json.loads(mongo_resp)
     data["id"] = data["_id"]["$oid"]
-    if "create_time" in data and \
-            data["create_time"] is not None and \
-            "$date" in data["create_time"]:
-        data["create_time"] = datetime.fromtimestamp(int(str(data["create_time"]["$date"])[:-3]))
+
+    if "created_time" in data and \
+            data["created_time"] is not None and \
+            "$date" in data["created_time"]:
+        data["created_time"] = datetime.fromtimestamp(int(str(data["created_time"]["$date"])[:-3]))
+
+    if "updated_at" in data and \
+            data["updated_at"] is not None and \
+            "$date" in data["updated_at"]:
+        data["updated_at"] = datetime.fromtimestamp(int(str(data["updated_at"]["$date"])[:-3]))
+
     return data
 
 
